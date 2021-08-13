@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 
 class websiteHomePage extends StatefulWidget {
@@ -42,6 +44,28 @@ class _websiteHomePageState extends State<websiteHomePage> {
     return status;
   }
 
+  late StreamSubscription<String> _onStateChanged;
+  final flutterWebviewPlugin = new FlutterWebviewPlugin();
+  bool anasayfadami = true;
+  late DateTime currentBackPressTime;
+  String gitUrl = '';
+  void initState() {
+    super.initState();
+    gitUrl = 'https://inodya.com/';
+    print(gitUrl);
+    _onStateChanged =
+        flutterWebviewPlugin.onUrlChanged.listen((String state) async {
+      if (state == 'https://inodya.com/en-human-oriented-software' ||
+          state == 'https://inodya.com/') {
+        anasayfadami = true;
+        print(anasayfadami);
+      } else {
+        gitUrl = '$state';
+        print(state);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
@@ -73,13 +97,35 @@ class _websiteHomePageState extends State<websiteHomePage> {
       );
     }
     if (_networkStatus1 == 'Wi-Fi' || _networkStatus1 == 'Mobile') {
-      return WebviewScaffold(
-        url: 'https://inodya.com/',
-        withJavascript: true,
-      );
+      if (anasayfadami == true) {
+        return WillPopScope(
+          onWillPop: () => onWillPop(),
+          child: Scaffold(
+            body: Center(
+              child: WebviewScaffold(
+                url: gitUrl,
+                withJavascript: true,
+                withZoom: true,
+                withLocalStorage: true,
+              ),
+            ),
+          ),
+        );
+      }
     }
     return Scaffold(
       backgroundColor: Colors.white,
     );
+  }
+
+  Future<bool> onWillPop() {
+    if (gitUrl == 'https://inodya.com/en-human-oriented-software' ||
+        gitUrl == 'https://inodya.com/') {
+      SystemNavigator.pop();
+      return Future.value(true);
+    } else {
+      gitUrl = 'https://inodya.com/';
+      return Future.value(true);
+    }
   }
 }
